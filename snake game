@@ -1,0 +1,135 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Random;
+
+public class SnakeGame extends JPanel implements KeyListener {
+
+    // Game constants
+    private static final int WIDTH = 400;
+    private static final int HEIGHT = 400;
+    private static final int BLOCK_SIZE = 20;
+    private static final int DELAY = 100;
+
+   
+    private int[] x = new int[WIDTH / BLOCK_SIZE];
+    private int[] y = new int[HEIGHT / BLOCK_SIZE];
+    private int score = 0;
+    private int fruitX, fruitY;
+    private boolean gameOver = false;
+    private boolean up, down, left, right;
+
+    private Timer timer;
+
+    public SnakeGame() {
+        setPreferredSize(new Dimension(WIDTH, HEIGHT));
+        setBackground(Color.BLACK);
+        setFocusable(true);
+        requestFocus();
+        addKeyListener(this);
+
+        
+        for (int i = 0; i < x.length; i++) {
+            x[i] = 0;
+            y[i] = 0;
+        }
+        fruitX = new Random().nextInt(WIDTH / BLOCK_SIZE) * BLOCK_SIZE;
+        fruitY = new Random().nextInt(HEIGHT / BLOCK_SIZE) * BLOCK_SIZE;
+
+        
+        timer = new Timer(DELAY, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateGame();
+                repaint();
+            }
+        });
+        timer.start();
+    }
+
+    private void updateGame() {
+      
+        for (int i = x.length - 1; i > 0; i--) {
+            x[i] = x[i - 1];
+            y[i] = y[i - 1];
+        }
+        if (up) {
+            y[0] -= BLOCK_SIZE;
+        } else if (down) {
+            y[0] += BLOCK_SIZE;
+        } else if (left) {
+            x[0] -= BLOCK_SIZE;
+        } else if (right) {
+            x[0] += BLOCK_SIZE;
+        }
+
+        
+        if (x[0] == fruitX && y[0] == fruitY) {
+            score++;
+            fruitX = new Random().nextInt(WIDTH / BLOCK_SIZE) * BLOCK_SIZE;
+            fruitY = new Random().nextInt(HEIGHT / BLOCK_SIZE) * BLOCK_SIZE;
+        }
+
+        
+        if (x[0] < 0 || x[0] >= WIDTH || y[0] < 0 || y[0] >= HEIGHT || checkCollision()) {
+            gameOver = true;
+            timer.stop();
+        }
+    }
+
+    private boolean checkCollision() {
+        for (int i = 1; i < x.length; i++) {
+            if (x[0] == x[i] && y[0] == y[i]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (gameOver) {
+            g.setColor(Color.WHITE);
+            g.drawString("Game Over! Score: " + score, WIDTH / 2 - 50, HEIGHT / 2);
+        } else {
+            g.setColor(Color.WHITE);
+            g.drawString("Score: " + score, 10, 20);
+            g.setColor(Color.RED);
+            g.fillRect(fruitX, fruitY, BLOCK_SIZE, BLOCK_SIZE);
+            g.setColor(Color.GREEN);
+            for (int i = 0; i < x.length; i++) {
+                g.fillRect(x[i], y[i], BLOCK_SIZE, BLOCK_SIZE);
+            }
+        }
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        int key = e.getKeyCode();
+        if (key == KeyEvent.VK_UP && !down) {
+            up = true;
+            left = false;
+            right = false;
+        } else if (key == KeyEvent.VK_DOWN && !up) {
+            down = true;
+            left = false;
+            right = false;
+        } else if (key == KeyEvent.VK_LEFT && !right) {
+            left = true;
+            up = false;
+            down = false;
+        } else if (key == KeyEvent.VK_RIGHT && !left) {
+            right = true;
+            up = false;
+            down = false;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+    }
